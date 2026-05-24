@@ -34,23 +34,55 @@ int main()
     }
     // Coord *temp = realloc(visited, t * sizeof(Coord));
     // visited = temp;
-    int n = length;
+    int num_of_instructions = length;
+    int x, y = 0;
+    int xR, yR = 0;
+    if (fileSize < 1000)
+    {
+        x = 500, y = 500;
 
-    int x = fileSize / 2, y = fileSize / 2;
-    int xR = fileSize / 2, yR = fileSize / 2;
+        xR = 500, yR = 500;
+    }
+    else
+    {
+        x = fileSize / 2, y = fileSize / 2;
+        xR = fileSize / 2, yR = fileSize / 2;
+    }
     int needed = snprintf(NULL, 0, "%d%d", x, y);
+    char *key = calloc(needed + 1, sizeof(char)); // +1 for null terminator
+    snprintf(key, needed + 1, "%d%d", x, y);
 
-    for (int i = 0; i < n; i++)
+    for (int i = 0; i < num_of_instructions; i++)
     {
         if (i == 0)
         {
+
+            visited[0] = key;
             count++;
+            printf("inserted: %s\n", visited[0]);
         }
-        char *key = calloc(needed + 1, sizeof(char)); // +1 for null terminator
+
+        char current = ptr[i];
+
+        switch (current)
+        {
+        case '^':
+            x--;
+            break;
+        case '>':
+            y++;
+            break;
+        case 'v':
+            x++;
+            break;
+        case '<':
+            y--;
+            break;
+        }
+        key = calloc(needed + 1, sizeof(char)); // +1 for null terminator
         snprintf(key, needed + 1, "%d%d", x, y);
         //      printf("key: %s\n", key);
         char *currentCoord = key;
-
         // printf("currentCoord: %s\n", currentCoord);
         int inserted = 0;
         for (int j = 0; j < t; j++)
@@ -82,59 +114,7 @@ int main()
             free(key);
         }
 
-        char current = ptr[i];
-
-        switch (current)
-        {
-        case '^':
-            x--;
-            break;
-        case '>':
-            y++;
-            break;
-        case 'v':
-            x++;
-            break;
-        case '<':
-            y--;
-            break;
-        }
         i++;
-        char *keyR = calloc(needed + 1, sizeof(char)); // +1 for null terminator
-        snprintf(keyR, needed + 1, "%d%d", xR, yR);
-        char *currentCoordR = keyR;
-
-        // printf("currentCoord: %s\n", currentCoord);
-        inserted = 0;
-        for (int j = 0; j < t; j++)
-        {
-            int res = strcmp(visited[j], ".");
-            // printf("visited: %s\n", visited[j]);
-
-            if (res == 0)
-            {
-                visited[j] = currentCoordR;
-                count++;
-                inserted = 1;
-                printf("inserted: %s\n", visited[j]);
-                break;
-            }
-            else if (strcmp(visited[j], currentCoordR) == 0)
-            { // already visited, skip
-                printf("duplicate: %s\n", currentCoord);
-                break;
-            }
-            else
-            {
-                continue;
-            }
-        }
-
-        if (!inserted)
-        {
-            free(keyR);
-        }
-
         current = ptr[i];
 
         switch (current)
@@ -152,26 +132,40 @@ int main()
             yR--;
             break;
         }
-    }
-    count = 0;
-    for (int k = 0; k < t; k++)
-    {
-        int res = strcmp(visited[k], ".");
-        // printf("visited: %s\n", visited[k]);
+        key = calloc(needed + 1, sizeof(char)); // +1 for null terminator
+        snprintf(key, needed + 1, "%d%d", xR, yR);
+        //      printf("key: %s\n", key);
+        currentCoord = key;
+        for (int j = 0; j < t; j++)
+        {
+            int res = strcmp(visited[j], ".");
+            // printf("visited: %s\n", visited[j]);
 
-        if (res == 0)
-        {
-            break;
+            if (res == 0)
+            {
+                visited[j] = currentCoord;
+                count++;
+                inserted = 1;
+                printf("inserted: %s\n", visited[j]);
+                break;
+            }
+            else if (strcmp(visited[j], currentCoord) == 0)
+            { // already visited, skip
+                printf("duplicate: %s\n", currentCoord);
+                break;
+            }
+            else
+            {
+                continue;
+            }
         }
-        else
+
+        if (!inserted)
         {
-            count++;
+            free(key);
         }
     }
-    // if (count == 1)
-    // {
-    //     count++;
-    // }
+
     printf("count: %d\n", count);
     return 0;
 }

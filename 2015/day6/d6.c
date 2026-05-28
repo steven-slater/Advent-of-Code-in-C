@@ -1,7 +1,18 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
+#include <string.h>
+typedef struct
+{
+    int upleft[2];
+    int lwrleft[2];
+    int upright[2];
+    int lwrright[2];
+} Coords;
 int main()
 {
+    Coords coords[1000];
+    char *token;
     FILE *fp;
     fp = fopen("p1.txt", "rb");
     if (fp == NULL)
@@ -21,13 +32,17 @@ int main()
         fclose(fp);
         return 1;
     }
-    char line[100];
+    char line[100]; // buffer for each line
     // Read file contents into buffer
     long bytesRead = fread(buffer, sizeof(char), fileSize, fp);
     buffer[fileSize] = '\0'; // Null-terminate the string
     int lineindex = 0;
+    bool turnon = true;
+    bool toggle = true;
     for (int i = 0; i < bytesRead; i++)
     {
+        // Coords *current = malloc(sizeof(Coords));
+
         lineindex = 0;
         while (buffer[i] != '\n' && buffer[i] != '\r')
         {
@@ -35,8 +50,9 @@ int main()
             i++;
         }
         line[lineindex] = '\0'; // Null-terminate the line
-        printf("%s\n", line);   // Print the line
-        i += 1;
+        lineindex = 0;
+        printf("%s\n", line);
+        token = strtok(line, ", ");
     }
     // Do something with the buffer, e.g., print its contents
     printf("%s", buffer);

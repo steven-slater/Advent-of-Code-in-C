@@ -9,13 +9,14 @@ typedef struct
     int rowend;
     int colend;
 } Coords;
+Coords coords[1000];
 int main()
 {
     Coords coords[1000];
     char *token;
     FILE *fp;
-    char *options;
-    fp = fopen("p1.txt", "rb");
+    int coordindex = 0;
+    fp = fopen("s1.txt", "rb");
     if (fp == NULL)
     {
         perror("Can't open file");
@@ -38,26 +39,58 @@ int main()
     long bytesRead = fread(buffer, sizeof(char), fileSize, fp);
     buffer[fileSize] = '\0'; // Null-terminate the string
     int lineindex = 0;
-    bool turnon = true;
+    bool turnon = false;
     bool toggle = false;
-    for (int i = 0; i < bytesRead; i++)
+    int i = 0;
+    while (i < bytesRead)
     {
+        if (buffer[i] == '\n' || buffer[i] == '\r')
+        {
+            i++;
+        }
+
         Coords *current = malloc(sizeof(Coords));
 
         lineindex = 0;
-        while (buffer[i] != '\n' && buffer[i] != '\r')
+        while (i < bytesRead && buffer[i] != '\n' && buffer[i] != '\r')
         {
             line[lineindex++] = buffer[i];
             i++;
         }
         line[lineindex] = '\0'; // Null-terminate the line
-        lineindex = 0;
+        if (lineindex == 0)
+        {
+            continue;
+        }
         // printf("%s\n", line);
         token = strtok(line, ", ");
         printf("%s\n", token);
         while (token != NULL)
         {
-            stricmp("toggle", token) == 0 ? toggle = true : false;
+            int comp = stricmp("turn", token);
+            if (comp == 0)
+            {
+                token = strtok(NULL, ", ");
+                printf("%s\n", token);
+                if (stricmp("on", token) == 0)
+                {
+                    turnon = true;
+                }
+                else
+                {
+                    turnon = false;
+                }
+            }
+
+            comp = stricmp("toggle", token);
+            if (comp == 0)
+            {
+                toggle = true;
+            }
+            else
+            {
+                toggle = false;
+            }
 
             token = strtok(NULL, ", ");
             printf("colstart: %s\n", token);
@@ -65,21 +98,29 @@ int main()
             token = strtok(NULL, ", ");
             printf("colend: %s\n", token);
             current->colend = atoi(token);
-            token = strtok(NULL, " ");
+            token = strtok(NULL, ", ");
             token = strtok(NULL, ", ");
             printf("rowstart: %s\n", token);
             current->rowstart = atoi(token);
             token = strtok(NULL, ", ");
             printf("rowend: %s\n", token);
             current->rowend = atoi(token);
+            token = strtok(NULL, ", ");
         }
-        free(current);
+        coords[coordindex++] = *current;
+        //  free(current);
     }
     // Do something with the buffer, e.g., print its contents
-    printf("%s", buffer);
+    for (int j = 0; j < coordindex; j++)
+    {
+        Coords c = coords[j];
+        printf("Row start: %d, Col start: %d, Row end: %d, Col end: %d\n", c.rowstart, c.colstart, c.rowend, c.colend);
+    }
+    //    printf("%s", buffer);
 
     // Clean up
     free(buffer);
+    free(coords);
     fclose(fp);
     return 0;
 }

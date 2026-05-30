@@ -9,28 +9,46 @@ typedef struct
     int rowend;
     int colend;
 } Coords;
-Coords coords[1000];
-void printGrid(bool grid[1000][1000])
+
+void printGrid(int grid[1000][1000])
 {
+    int counter = 0;
+    int brightness = 0;
     for (int i = 0; i < 1000; i++)
     {
         for (int j = 0; j < 1000; j++)
         {
-            printf("%d ", grid[i][j]);
+
+            if (grid[i][j])
+            {
+                counter++;
+            }
+
+            brightness += grid[i][j];
         }
-        printf("\n");
+        // printf("\n");
     }
+    printf("Total lights on: %d\n", counter);
+    printf("Total brightness: %d\n", brightness);
 }
+int lights[1000][1000]; // initialize all lights to off
+
 int main()
 {
-
-    Coords coords[1000];
-    bool lights[1000][1000] = {true};
+    bool part2 = true;
+    for (int i = 0; i < 1000; i++)
+    {
+        for (int j = 0; j < 1000; j++)
+        {
+            lights[i][j] = 0; // start with all lights off
+            // printf("%d", lights[i][j]);
+        }
+    }
 
     char *token;
     FILE *fp;
     int coordindex = 0;
-    fp = fopen("s1.txt", "rb");
+    fp = fopen("p1.txt", "rb");
     if (fp == NULL)
     {
         perror("Can't open file");
@@ -78,73 +96,98 @@ int main()
             continue;
         }
         // printf("%s\n", line);
-        token = strtok(line, ", ");
+        token = strtok(line, " ");
         printf("%s\n", token);
-        while (token != NULL)
+        //   while (token != NULL)
+        // {
+        int comp = stricmp("turn", token);
+        if (comp == 0)
         {
-            int comp = stricmp("turn", token);
-            if (comp == 0)
+            token = strtok(NULL, ", ");
+            printf("%s\n", token);
+            if (stricmp("on", token) == 0)
             {
-                token = strtok(NULL, ", ");
-                printf("%s\n", token);
-                if (stricmp("on", token) == 0)
-                {
-                    turnon = true;
-                }
-                else
-                {
-                    turnon = false;
-                }
-            }
-
-            comp = stricmp("toggle", token);
-            if (comp == 0)
-            {
-                toggle = true;
+                turnon = true;
             }
             else
             {
-                toggle = false;
+                turnon = false;
             }
+        }
 
-            token = strtok(NULL, ", ");
-            printf("colstart: %s\n", token);
-            current->colstart = atoi(token);
-            token = strtok(NULL, ", ");
-            printf("rowstart: %s\n", token);
-            current->rowstart = atoi(token);
-            token = strtok(NULL, ", ");
-            token = strtok(NULL, ", ");
-            printf("colend: %s\n", token);
-            current->colend = atoi(token);
-            token = strtok(NULL, ", ");
-            printf("rowend: %s\n", token);
-            current->rowend = atoi(token);
-            token = strtok(NULL, ", ");
+        comp = stricmp("toggle", token);
+        if (comp == 0)
+        {
+            toggle = true;
+            turnon = false;
+        }
+        else
+        {
+            toggle = false;
+        }
 
-            //        coords[coordindex++] = *current;
-            //  free(current);
+        token = strtok(NULL, ", ");
+        printf("colstart: %s\n", token);
+        current->colstart = atoi(token);
+        token = strtok(NULL, ", ");
+        printf("rowstart: %s\n", token);
+        current->rowstart = atoi(token);
+        token = strtok(NULL, ", ");
+        token = strtok(NULL, ", ");
+        printf("colend: %s\n", token);
+        current->colend = atoi(token);
+        token = strtok(NULL, ", ");
+        printf("rowend: %s\n", token);
+        current->rowend = atoi(token);
+        token = strtok(NULL, ", ");
 
-            for (int gridindex = current->colstart; gridindex <= current->colend; gridindex++)
+        for (int gridindex = current->rowstart; gridindex <= current->rowend; gridindex++)
+        {
+            for (int j = current->colstart; j <= current->colend; j++)
             {
-                for (int j = current->rowstart; j <= current->rowend; j++)
+                if (toggle)
                 {
-                    if (toggle)
+                    if (part2)
                     {
+                        lights[gridindex][j] += 2;
+                    }
+                    else
+                    { //                      printf("%d", lights[gridindex][j]);
                         lights[gridindex][j] = !lights[gridindex][j];
+                        //                        printf("%d", lights[gridindex][j]);
+                    }
+                }
+                else
+                {
+                    if (part2)
+                    {
+                        if (turnon)
+                        {
+                            lights[gridindex][j]++;
+                        }
+                        else
+                        {
+                            if (lights[gridindex][j] > 0)
+                            {
+                                lights[gridindex][j]--;
+                            }
+                        }
                     }
                     else
                     {
-                        lights[gridindex][j] = turnon;
+                        if (part2 == false)
+                        {
+                            lights[gridindex][j] = turnon;
+                        }
                     }
                 }
             }
-            printGrid(lights);
         }
+        free(current);
     }
     // Clean up
     free(buffer);
-    free(coords);
+    printGrid(lights);
     fclose(fp);
     return 0;
 }

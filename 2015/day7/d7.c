@@ -122,38 +122,58 @@ int main() {
             strcpy(reg1, token);
             token = strtok(NULL, " ");
             strcpy(operator, token);
+
             if (stricmp(reg1, "NOT") == 0) {
                 char temp[5];
                 strcpy(temp, operator);
                 strcpy(operator, reg1);
                 strcpy(reg1, temp);
+            } else if (stricmp(operator, "LSHIFT") == 0) {
+                printf("LSHIFT operator found\n");
+                token = strtok(NULL, " ");
+                strcpy(reg2, token);
+                token = strtok(NULL, " ");
+                token = strtok(NULL, " ");
+                strcpy(reg3, token);
+                printf("%s %s %s\n", reg1, operator, reg2);
+            } else if (stricmp(operator, "RSHIFT") == 0) {
+                printf("RSHIFT operator found\n");
+                token = strtok(NULL, " ");
+                strcpy(reg2, token);
+                token = strtok(NULL, " ");
+                token = strtok(NULL, " ");
+                strcpy(reg3, token);
+                printf("%s %s %s\n", reg1, operator, reg2);
+
             } else if (stricmp(operator, "AND") == 0 ||
-                       stricmp(operator, "OR") ||
-                       stricmp(operator, "NOT") == 0 ||
+                       // stricmp(operator, "NOT") == 0 ||
                        stricmp(operator, "XOR") == 0 ||
-                       stricmp(operator, "LSHIFT") == 0 ||
-                       stricmp(operator, "RSHIFT") == 0) {
-                // register AND/OR/NOT register -> register
-                // strcat(operator, " AND/OR/NOT");
+                       stricmp(operator, "OR") == 0) {
+
                 token = strtok(NULL, " ");
                 strcpy(reg2, token);
                 token = strtok(NULL, " "); // skip the "->" token
                 token = strtok(NULL, " ");
                 strcpy(reg3, token);
                 printf("%s %s %s -> %s\n", reg1, operator, reg2, reg3);
-                HASH_FIND_STR(table, reg1, found); // REGISTER 1
-                if (found) {
-                    printf("Found register: %s with value: %d\n", found->key,
-                           found->value);
-                    reg1val = found->value;
-                } else {
-                    printf("Register not found, adding: %s\n", reg1);
+            }
+            HASH_FIND_STR(table, reg1, found); // REGISTER 1
+            if (found) {
+                printf("Found register: %s with value: %d\n", found->key,
+                       found->value);
+                reg1val = found->value;
+            } else {
+                printf("Register not found, adding: %s\n", reg1);
 
-                    add_entry(&table, reg1, 1);
+                add_entry(&table, reg1, 1);
 
-                    //                    token = strtok(NULL, " ");
-                }
+                //                    token = strtok(NULL, " ");
+            }
+            int res = stricmp(operator, "LSHIFT");
+            if (stricmp(operator, "LSHIFT") != 0 &&
+                stricmp(operator, "RSHIFT") != 0) {
                 HASH_FIND_STR(table, reg2, found);
+
                 if (found) {
                     printf("Found register: %s with value: %d\n", found->key,
                            found->value);
@@ -165,37 +185,39 @@ int main() {
                     printTable(table);
                     // token = strtok(NULL, " ");
                 }
-                HASH_FIND_STR(table, reg3, found);
+            }
 
-                int result = 0;
+            HASH_FIND_STR(table, reg3, found);
 
-                int r1 = reg1val;
-                int r2 = reg2val;
+            int result = 0;
 
-                if (stricmp(operator, "AND") == 0) {
-                    result = r1 & r2;
-                } else if (stricmp(operator, "OR") == 0) {
-                    result = r1 | r2;
-                } else if (stricmp(operator, "NOT") == 0) {
-                    result = ~r1;
-                } else if (stricmp(operator, "XOR") == 0) {
-                    result = r1 ^ r2;
-                } else if (stricmp(operator, "LSHIFT") == 0) {
-                    result = r1 << r2;
-                } else if (stricmp(operator, "RSHIFT") == 0) {
-                    result = r1 >> r2;
-                }
-                if (found) {
-                    printf("Found register: %s with value: %d\n", found->key,
-                           found->value);
-                    found->value = result;
-                } else {
-                    printf("Register not found, adding: %s\n", reg3);
+            int r1 = reg1val;
+            int r2 = reg2val;
 
-                    add_entry(&table, reg3, result);
-                    printTable(table);
-                    // token = strtok(NULL, " ");
-                }
+            if (stricmp(operator, "AND") == 0) {
+                result = r1 & r2;
+            } else if (stricmp(operator, "OR") == 0) {
+                result = r1 | r2;
+            } else if (stricmp(operator, "NOT") == 0) {
+                result = ~r1;
+            } else if (stricmp(operator, "XOR") == 0) {
+                result = r1 ^ r2;
+
+            } else if (stricmp(operator, "LSHIFT") == 0) {
+                result = r1 << atoi(reg2);
+            } else if (stricmp(operator, "RSHIFT") == 0) {
+                result = r1 >> atoi(reg2);
+            }
+            if (found) {
+                printf("Found register: %s with value: %d\n", found->key,
+                       found->value);
+                found->value = result;
+            } else {
+                printf("Register not found, adding: %s\n", reg3);
+
+                add_entry(&table, reg3, result);
+                printTable(table);
+                // token = strtok(NULL, " ");
             }
         }
 

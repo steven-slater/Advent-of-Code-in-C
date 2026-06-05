@@ -27,7 +27,7 @@ Entry *table = NULL;
 int main() {
     char *buffer;
     FILE *fp;
-    fp = fopen("s1.txt", "rb");
+    fp = fopen("p1.txt", "rb");
     if (fp == NULL) {
         perror("Error opening file");
         return 1;
@@ -128,6 +128,9 @@ int main() {
                 strcpy(temp, operator);
                 strcpy(operator, reg1);
                 strcpy(reg1, temp);
+                token = strtok(NULL, " ");
+                token = strtok(NULL, " ");
+                strcpy(reg2, token);
             } else if (stricmp(operator, "LSHIFT") == 0) {
                 printf("LSHIFT operator found\n");
                 token = strtok(NULL, " ");
@@ -143,10 +146,9 @@ int main() {
                 token = strtok(NULL, " ");
                 token = strtok(NULL, " ");
                 strcpy(reg3, token);
-                printf("%s %s %s\n", reg1, operator, reg2);
+                //      printf("%s %s %s\n", reg1, operator, reg2);
 
             } else if (stricmp(operator, "AND") == 0 ||
-                       // stricmp(operator, "NOT") == 0 ||
                        stricmp(operator, "XOR") == 0 ||
                        stricmp(operator, "OR") == 0) {
 
@@ -155,28 +157,28 @@ int main() {
                 token = strtok(NULL, " "); // skip the "->" token
                 token = strtok(NULL, " ");
                 strcpy(reg3, token);
-                printf("%s %s %s -> %s\n", reg1, operator, reg2, reg3);
+                //    printf("%s %s %s -> %s\n", reg1, operator, reg2, reg3);
             }
             HASH_FIND_STR(table, reg1, found); // REGISTER 1
             if (found) {
-                printf("Found register: %s with value: %d\n", found->key,
-                       found->value);
+                //        printf("Found register: %s with value: %d\n",
+                //      found->key,
+                //     found->value);
                 reg1val = found->value;
             } else {
                 printf("Register not found, adding: %s\n", reg1);
 
-                add_entry(&table, reg1, 1);
-
-                //                    token = strtok(NULL, " ");
+                add_entry(&table, reg1, 0);
             }
-            int res = stricmp(operator, "LSHIFT");
+
             if (stricmp(operator, "LSHIFT") != 0 &&
                 stricmp(operator, "RSHIFT") != 0) {
                 HASH_FIND_STR(table, reg2, found);
 
                 if (found) {
-                    printf("Found register: %s with value: %d\n", found->key,
-                           found->value);
+                    //              printf("Found register: %s with value:
+                    //              %d\n", found->key,
+                    //  found->value);
                     reg2val = found->value;
                 } else {
                     printf("Register not found, adding: %s\n", reg2);
@@ -184,6 +186,9 @@ int main() {
                     add_entry(&table, reg2, 1);
                     printTable(table);
                     // token = strtok(NULL, " ");
+                }
+                if (stricmp(operator, "NOT") == 0) {
+                    strcpy(reg3, reg2);
                 }
             }
 
@@ -199,7 +204,7 @@ int main() {
             } else if (stricmp(operator, "OR") == 0) {
                 result = r1 | r2;
             } else if (stricmp(operator, "NOT") == 0) {
-                result = ~r1;
+                result = (~r1) & 0xFFFF; // because of 16bit unsigned int
             } else if (stricmp(operator, "XOR") == 0) {
                 result = r1 ^ r2;
 
@@ -209,22 +214,28 @@ int main() {
                 result = r1 >> atoi(reg2);
             }
             if (found) {
-                printf("Found register: %s with value: %d\n", found->key,
-                       found->value);
+                //            printf("Found register: %s with value: %d\n",
+                //            found->key,
+                //         found->value);
                 found->value = result;
             } else {
                 printf("Register not found, adding: %s\n", reg3);
 
                 add_entry(&table, reg3, result);
-                printTable(table);
+
                 // token = strtok(NULL, " ");
             }
+            //   printTable(table);
         }
 
         if (fileindex < fileSize && buffer[fileindex] == '\n' ||
             buffer[fileindex] == '\r') {
             fileindex++;
         }
+    }
+    HASH_FIND_STR(table, "a", found);
+    if (found) {
+        printf("Final value in register 'a': %d\n", found->value);
     }
     return 0;
 }

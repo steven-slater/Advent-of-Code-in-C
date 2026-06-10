@@ -3,7 +3,7 @@
 #include <string.h>
 int main() {
     FILE *fp;
-    fp = fopen("test.txt", "rb"); // rb always
+    fp = fopen("p1.txt", "rb"); // rb always
     if (fp == NULL) {
         printf("Error opening file\n");
         return 1;
@@ -37,36 +37,35 @@ int main() {
         line[lineindex] = '\0';
         int len = strlen(line);
 
-        totalinmemsize += len - 2;
+        // len -= 2; // Subtract 2 for the surrounding quotes
+        printf("%s is %d characters long\n", line, len);
 
-        //    printf("%s is %d characters long\n", line, len);
-        //    printf("Subtract 2 for quotes: %ld\n", totalinmemsize);
-        for (int i = 0; i < len; i++) {
+        for (int i = 1; i < len - 1; i++) {
             if (line[i] == '\\') {
 
                 if (line[i + 1] == 'x') {
-                    totalinmemsize -= 3; // \xNN is 4 characters in the file but
-                    i += 3;              // represents 1 character in memory
-                    //                  printf("Subtract 3 for hex escape:
-                    //                  %d\n", totalinmemsize);
+                    totalinmemsize++; // \xNN is 4 characters in the file but
+                    i += 3;           // represents 1 character in memory
+                    printf("Add 1 for hex escape: %d\n", totalinmemsize);
                     continue;
                 }
 
                 if (line[i + 1] == '\\') {
-                    totalinmemsize -= 1; // \\ is 2 characters in the file but
-                                         // represents 1 character in memory
+                    totalinmemsize++; // \\ is 2 characters in the file but
+                                      // represents 1 character in memory
                     i += 1;
-                    //                    printf("Subtract 1 for backslash:
-                    //                    %d\n", totalinmemsize);
+                    printf("Add 1 for backslash: %d\n", totalinmemsize);
                     continue;
                 } else {
-                    totalinmemsize -= 1;
+                    totalinmemsize++;
                     i += 1;
-                    //  printf("Subtract 1 for regular escape: %d\n",
-                    //  totalinmemsize);
+                    printf("Add 1 for regular escape: %d\n", totalinmemsize);
+                    continue;
                 }
             }
+            totalinmemsize++; // Regular characters count as 1 in memory
         }
+        printf("Size in memory: %ld\n", totalinmemsize);
         grandototalinmemsize += totalinmemsize;
         totalstrinsize += len;
         // Skip ALL trailing newline/return characters (\n, \r, or \r\n)

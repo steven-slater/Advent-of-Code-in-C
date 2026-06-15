@@ -1,14 +1,47 @@
 #include "uthash.h"
+#include <ctype.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
+int is_number(const char *s) {
+    if (s == NULL || *s == '\0')
+        return 0; // null/empty → false
+    while (*s) {
+        if (!isdigit(*s))
+            return 0;
+        s++;
+    }
+    return 1;
+}
+typedef struct {
+    char *key;
+    char *oper1;
+    char *operation;
+    char *oper2;
+    UT_hash_handle hh;
+} Wires;
+
+void add_wire(Wires **registers, const char *key, char *oper1, char *operation,
+              char *oper2) {
+    Wires *wire = (Wires *)malloc(sizeof(Wires));
+    strncpy(wire->key, key, sizeof(wire->key) - 1);
+    wire->key[sizeof(wire->key) - 1] = '\0'; // Ensure null-termination
+    strncpy(wire->oper1, oper1, sizeof(wire->oper1) - 1);
+    wire->key[sizeof(wire->oper1) - 1] = '\0'; // Ensure null-termination
+    strncpy(wire->operation, operation, sizeof(wire->operation) - 1);
+    wire->key[sizeof(wire->operation) - 1] = '\0'; // Ensure null-termination
+    strncpy(wire->oper2, oper2, sizeof(wire->oper2) - 1);
+    wire->key[sizeof(wire->oper2) - 1] = '\0'; // Ensure null-termination
+    HASH_ADD_STR(*registers, key, wire);
+}
 typedef struct {
     char key[50];
     int value;
     UT_hash_handle hh; // makes this struct hashable
 } Entry;
+
 void add_entry(Entry **table, const char *key, int value) {
     Entry *entry = (Entry *)malloc(sizeof(Entry));
     strncpy(entry->key, key, sizeof(entry->key) - 1);
@@ -23,7 +56,17 @@ void printTable(Entry *table) {
     }
     printf("---\n"); // set breakpoint on this line
 }
+void printRegisters(Wires *table) {
+    Wires *current, *tmp;
+    HASH_ITER(hh, table, current, tmp) {
+        printf("key: '%s' value: %s %s %s %s\n", current->key, current->oper1,
+               current->oper2);
+    }
+    printf("---\n"); // set breakpoint on this line
+}
 Entry *table = NULL;
+Wires *registers = NULL;
+
 int main() {
     char *buffer;
     FILE *fp;
@@ -66,9 +109,51 @@ int main() {
         int len = strlen(line);
         printf("line: '%s' \n", line);
         //  printf("%s %ld\n", line, len);
-
+        char op1[20];
+        char op2[20];
+        char target[20];
+        char tokens[4][20];
+        int tokindex = 0;
+        char amount[20];
         token = strtok(line, " ");
         printf("first token: %s\n", token);
+        for (int j = 0; j <= 4; j++) {
+            if (token == NULL) {
+                break;
+            }
+            if (strcmp(token, "->") == 0) {
+                if (tokindex == 1) {
+                    strcpy(operator, "ASSIGN");
+                }
+                token = strtok(NULL, " ");
+                continue;
+            }
+            strcpy(tokens[tokindex++], token);
+            token = strtok(NULL, " ");
+        }
+        for (int k = 0; k < tokindex; k++) {
+            printf("%s ", tokens[k]);
+        }
+        if (tokindex == 4) {
+            strcpy(target, tokens[3]);
+            strcpy(op1, tokens[0]);
+            strcpy(operator, tokens[1]);
+            if (is_number(tokens[2]) == true) {
+                strcpy(op2, tokens[2]);
+            }
+            Wires *wire = calloc(1, sizeof(Wires));
+            // snprintf(wire->key, sizeof(wire->key), "%s", target);
+            wire->key = target;
+            wire->oper1 = op1;
+            wire->oper2 = op2;
+            wire->operation = operator;
+            HASH_ADD_STR(registers, key, wire);
+            printRegisters(wire);
+            tokindex = 0;
+        }
+    }
+    fileindex = 0;
+    while (fileindex < fileSize) {
         char c = token[0];
         if (isdigit(c)) {
             amt = atoi(token);

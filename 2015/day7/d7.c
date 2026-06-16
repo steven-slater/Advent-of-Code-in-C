@@ -23,19 +23,6 @@ typedef struct {
     UT_hash_handle hh;
 } Wires;
 
-void add_wire(Wires **registers, const char *key, char *oper1, char *operation,
-              char *oper2) {
-    Wires *wire = (Wires *)malloc(sizeof(Wires));
-    strncpy(wire->key, key, sizeof(wire->key) - 1);
-    wire->key[sizeof(wire->key) - 1] = '\0'; // Ensure null-termination
-    strncpy(wire->oper1, oper1, sizeof(wire->oper1) - 1);
-    wire->key[sizeof(wire->oper1) - 1] = '\0'; // Ensure null-termination
-    strncpy(wire->operation, operation, sizeof(wire->operation) - 1);
-    wire->key[sizeof(wire->operation) - 1] = '\0'; // Ensure null-termination
-    strncpy(wire->oper2, oper2, sizeof(wire->oper2) - 1);
-    wire->key[sizeof(wire->oper2) - 1] = '\0'; // Ensure null-termination
-    HASH_ADD_STR(*registers, key, wire);
-}
 typedef struct {
     char key[50];
     int value;
@@ -59,8 +46,8 @@ void printTable(Entry *table) {
 void printRegisters(Wires *table) {
     Wires *current, *tmp;
     HASH_ITER(hh, table, current, tmp) {
-        printf("key: '%s' value: %s %s %s %s\n", current->key, current->oper1,
-               current->oper2);
+        printf("key: '%s' values: %s %s %s\n", current->key, current->oper1,
+               current->operation, current->oper2);
     }
     printf("---\n"); // set breakpoint on this line
 }
@@ -107,6 +94,8 @@ int main() {
         }
         line[lineindex] = '\0';
         int len = strlen(line);
+        if (len == 0)
+            continue;
         printf("line: '%s' \n", line);
         //  printf("%s %ld\n", line, len);
         char op1[20];
@@ -131,6 +120,7 @@ int main() {
             strcpy(tokens[tokindex++], token);
             token = strtok(NULL, " ");
         }
+
         for (int k = 0; k < tokindex; k++) {
             printf("%s ", tokens[k]);
         }
@@ -138,19 +128,23 @@ int main() {
             strcpy(target, tokens[3]);
             strcpy(op1, tokens[0]);
             strcpy(operator, tokens[1]);
-            if (is_number(tokens[2]) == true) {
-                strcpy(op2, tokens[2]);
-            }
-            Wires *wire = calloc(1, sizeof(Wires));
-            // snprintf(wire->key, sizeof(wire->key), "%s", target);
-            wire->key = target;
-            wire->oper1 = op1;
-            wire->oper2 = op2;
-            wire->operation = operator;
-            HASH_ADD_STR(registers, key, wire);
-            printRegisters(wire);
-            tokindex = 0;
+            strcpy(op2, tokens[2]);
+
+        } else if (tokindex == 2) {
+
+            strcpy(target, tokens[1]);
+            strcpy(op1, tokens[0]);
+            strcpy(op2, "NA");
+            strcpy(operator, "ASSIGN");
         }
+        Wires *wire = calloc(1, sizeof(Wires));
+        wire->key = strdup(target);
+        wire->oper1 = strdup(op1);
+        wire->oper2 = strdup(op2);
+        wire->operation = strdup(operator);
+        HASH_ADD_STR(registers, key, wire);
+        printRegisters(registers);
+        tokindex = 0;
     }
     fileindex = 0;
     while (fileindex < fileSize) {

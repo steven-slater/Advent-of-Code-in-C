@@ -1,0 +1,147 @@
+#include "uthash.h"
+#include <ctype.h>
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int is_number(const char *s) {
+    if (s == NULL || *s == '\0')
+        return 0; // null/empty → false
+    while (*s) {
+        if (!isdigit(*s))
+            return 0;
+        s++;
+    }
+    return 1;
+}
+typedef struct {
+    char *key;
+    char *oper1;
+    char *operation;
+    char *oper2;
+    UT_hash_handle hh;
+} Wires;
+
+typedef struct {
+    char key[50];
+    int value;
+    UT_hash_handle hh; // makes this struct hashable
+} Entry;
+
+void add_entry(Entry **table, const char *key, int value) {
+    Entry *entry = (Entry *)malloc(sizeof(Entry));
+    strncpy(entry->key, key, sizeof(entry->key) - 1);
+    entry->key[sizeof(entry->key) - 1] = '\0'; // Ensure null-termination
+    entry->value = value;
+    HASH_ADD_STR(*table, key, entry);
+}
+void printTable(Entry *table) {
+    Entry *current, *tmp;
+    HASH_ITER(hh, table, current, tmp) {
+        printf("key: '%s' value: %d\n", current->key, current->value);
+    }
+    printf("---\n"); // set breakpoint on this line
+}
+void printRegisters(Wires *table) {
+    Wires *current, *tmp;
+    HASH_ITER(hh, table, current, tmp) {
+        printf("\nkey: '%s' values: %s %s %s\n", current->key, current->oper1,
+               current->operation, current->oper2);
+    }
+    printf("---\n"); // set breakpoint on this line
+}
+Entry *table = NULL;
+Wires *registers = NULL;
+
+int main() {
+    char *buffer;
+    FILE *fp;
+    fp = fopen("p1.txt", "rb");
+    if (fp == NULL) {
+        perror("Error opening file");
+        return 1;
+    }
+    fseek(fp, 0, SEEK_END);
+    long fileSize = ftell(fp);
+    rewind(fp);
+    printf("%ld\n", fileSize);
+    buffer = (char *)malloc(fileSize + 1);
+    long bytesRead = fread(buffer, sizeof(char), fileSize, fp);
+    if (bytesRead != fileSize) {
+        perror("Error reading file");
+        free(buffer);
+        fclose(fp);
+        return 1;
+    }
+    buffer[fileSize] = '\0';
+    int fileindex = 0;
+    char line[256];
+    char operator[12];
+    char *token;
+    int amt = 0;
+    char reg1[5], reg2[5], reg3[5];
+    int reg1val, reg2val, reg3val;
+    Entry *found;
+    while (fileindex < fileSize) {
+        int lineindex = 0;
+        if (buffer[fileindex] == '\n' || buffer[fileindex] == '\r') {
+            fileindex++;
+        }
+        while (fileindex < fileSize && buffer[fileindex] != '\n' &&
+               buffer[fileindex] != '\r') {
+            line[lineindex++] = buffer[fileindex++];
+        }
+        line[lineindex] = '\0';
+        int len = strlen(line);
+        printf("line: '%s' \n", line);
+        //  printf("%s %ld\n", line, len);
+        char op1[20];
+        char op2[20];
+        char target[20];
+        char tokens[4][20];
+        int tokindex = 0;
+        char amount[20];
+        token = strtok(line, " ");
+        printf("first token: %s\n", token);
+        for (int j = 0; j <= 4; j++) {
+            if (token == NULL) {
+                break;
+            }
+            if (strcmp(token, "->") == 0) {
+                if (tokindex == 1) {
+                    strcpy(operator, "ASSIGN");
+                }
+                token = strtok(NULL, " ");
+                continue;
+            }
+            strcpy(tokens[tokindex++], token);
+            token = strtok(NULL, " ");
+        }
+        for (int k = 0; k < tokindex; k++) {
+            printf("%s ", tokens[k]);
+        }
+        if (tokindex == 4) {
+            strcpy(target, tokens[3]);
+            strcpy(op1, tokens[0]);
+            strcpy(operator, tokens[1]);
+         
+            strcpy(op2, tokens[2]);
+
+        } else if (tokindex == 1) {
+
+            strcpy(target, tokens[1]);
+            strcpy(op1, tokens[0]);
+            strcpy(op2, "NA");
+            strcpy(operator, "ASSIGN");
+        }
+        Wires *wire = calloc(1, sizeof(Wires));
+        wire->key = target;
+        wire->oper1 = op1;
+        wire->oper2 = op2;
+        wire->operation = operator;
+        HASH_ADD_STR(registers, key, wire);
+        printRegisters(registers);
+        tokindex = 0;
+    }
+}

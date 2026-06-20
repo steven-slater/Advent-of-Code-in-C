@@ -22,19 +22,47 @@ void printTable(Entry *table) {
     }
     printf("---\n"); // set breakpoint on this line
 }
-printGrid(int grid[3][3]) {
-    for (int i = 0; i < 3; i++) {
-        for (int j = 0; j < 3; j++) {
+printGrid(int grid[5][5]) {
+    for (int i = 0; i < 5; i++) {
+        for (int j = 0; j < 5; j++) {
             printf("%d ", grid[i][j]);
         }
         printf("\n");
     }
 }
 int main() {
-    int index = 1;
-    int grid[3][3];
-    for (int i = 0; i < 3; i++) {
-        for (int j = 0; j < 3; j++) {
+    FILE *gp = fopen("g1.txt", "rb");
+
+    fseek(gp, 0, SEEK_END);
+    long filesize = ftell(gp);
+    rewind(gp);
+    char *buffer;
+    buffer = calloc(1, filesize + 1);
+    fread(buffer, sizeof(char), filesize, gp);
+    buffer[filesize] = '\0';
+    long fileindex = 0;
+    char *line = calloc(1, filesize + 1);
+    int index = 0;
+    int rindex = 0;
+    int cindex = 0;
+    int grid[5][5];
+    while (fileindex < filesize) {
+        while (buffer[fileindex] == '\n' || buffer[fileindex] == '\r') {
+            fileindex++;
+        }
+        while (fileindex < filesize && buffer[fileindex] != '\n' &&
+               buffer[fileindex] != '\r') {
+
+            line[index++] = buffer[fileindex++];
+            grid[rindex][cindex] = line[index - 1];
+        }
+        line[index] = '\0';
+        index = 0;
+        printf("%s\n", line);
+    }
+    printGrid(grid);
+    for (int i = 0; i < 5; i++) {
+        for (int j = 0; j < 5; j++) {
             grid[i][j] = index;
             index++;
         }
@@ -45,26 +73,25 @@ int main() {
     char rloc[25];
     Entry *found;
     bool notdone = true;
-    FILE *fp = fopen("s1.txt", "rb");
+    FILE *fp = fopen("p1.txt", "rb");
     fseek(fp, 0, SEEK_END);
-    long filesize = ftell(fp);
+    filesize = ftell(fp);
     rewind(fp);
-    char *buffer;
+
     buffer = calloc(1, filesize + 1);
     fread(buffer, sizeof(char), filesize, fp);
     buffer[filesize] = '\0';
-    long fileindex = 0;
-    char line[25];
+    fileindex = 0;
+
+    //    char line[filesize];
     int resindex = 0;
     char direction = 'U'; // U D L R up down left right
     char prevdirection = 'U';
-    int amount = 0;
-    int linectr = 0;
-    int tottomove = 0;
+
     int row = ROWSTART;
     int col = COLSTART;
     index = 0;
-    int answer[5];
+    int answer[5000];
     while (fileindex < filesize) {
         while (buffer[fileindex] == '\n' || buffer[fileindex] == '\r') {
             fileindex++;
@@ -118,8 +145,9 @@ int main() {
         // printf("%d ", grid[row][col]);
         printf("%d\n", answer[resindex - 1]);
     }
-    for (int k = 0; k < 4; k++) {
-        printf("%d", answer[k]);
+    int k = 0;
+    while (answer[k] != 0) {
+        printf("%d", answer[k++]);
     }
     return 0;
 }

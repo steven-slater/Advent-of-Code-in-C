@@ -4,28 +4,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#define ROWSTART 1
-#define COLSTART 1
-typedef struct {
-    char key[50];
-    int value;
-    UT_hash_handle hh; // makes this struct hashable
-} Entry;
+#define ROWSTART 2
+#define COLSTART 0
 
-Entry *table = NULL;
-void printTable(Entry *table) {
-    int index = 0;
-    Entry *current, *tmp;
-    HASH_ITER(hh, table, current, tmp) {
-        printf("[%d] dkey: '%s' value: %d\n", index++, current->key,
-               current->value);
-    }
-    printf("---\n"); // set breakpoint on this line
-}
-printGrid(int grid[5][5]) {
+printGrid(char grid[5][5]) {
     for (int i = 0; i < 5; i++) {
         for (int j = 0; j < 5; j++) {
-            printf("%d ", grid[i][j]);
+            printf("%c ", grid[i][j]);
         }
         printf("\n");
     }
@@ -45,33 +30,31 @@ int main() {
     int index = 0;
     int rindex = 0;
     int cindex = 0;
-    int grid[5][5];
+    char grid[5][5];
     while (fileindex < filesize) {
         while (buffer[fileindex] == '\n' || buffer[fileindex] == '\r') {
             fileindex++;
         }
-        while (fileindex < filesize && buffer[fileindex] != '\n' &&
-               buffer[fileindex] != '\r') {
-
+        while (fileindex < filesize && buffer[fileindex] != '\0') {
+            while (buffer[fileindex] == '\n' || buffer[fileindex] == '\r') {
+                fileindex++;
+            }
             line[index++] = buffer[fileindex++];
+
             grid[rindex][cindex] = line[index - 1];
+            printf("%c", grid[rindex][cindex]);
+            cindex++;
+            if (cindex >= 5) {
+                rindex++;
+                printf("\n");
+            }
+            cindex %= 5;
         }
-        line[index] = '\0';
-        index = 0;
-        printf("%s\n", line);
+        free(line);
     }
+
     printGrid(grid);
-    for (int i = 0; i < 5; i++) {
-        for (int j = 0; j < 5; j++) {
-            grid[i][j] = index;
-            index++;
-        }
-    }
-    printGrid(grid);
-    char loc[50];
-    char cloc[25];
-    char rloc[25];
-    Entry *found;
+
     bool notdone = true;
     FILE *fp = fopen("p1.txt", "rb");
     fseek(fp, 0, SEEK_END);
@@ -87,11 +70,11 @@ int main() {
     int resindex = 0;
     char direction = 'U'; // U D L R up down left right
     char prevdirection = 'U';
-
+    line = calloc(1, 5000); // 4999 avail
     int row = ROWSTART;
     int col = COLSTART;
     index = 0;
-    int answer[5000];
+    char *answer = calloc(1, 5000);
     while (fileindex < filesize) {
         while (buffer[fileindex] == '\n' || buffer[fileindex] == '\r') {
             fileindex++;
@@ -110,24 +93,37 @@ int main() {
             case 'U':
                 if (row == 0)
                     break;
+                if (grid[row - 1][col] == '0')
+                    break;
+
                 row--; /* code */
                 break;
             case 'D':
+
+                if (row == 4)
+                    break;
+
+                if (grid[row + 1][col] == '0')
+                    break;
+
                 row++;
-                if (row == 3)
-                    row--;
                 break;
-                break;
+
             case 'L':
                 if (col == 0)
                     break;
+                if (grid[row][col - 1] == '0')
+                    break;
+
                 col--;
                 break;
             case 'R':
+                if (col >= 4)
+                    break;
+                if (grid[row][col + 1] == '0')
+                    break;
+
                 col++;
-                if (col == 3)
-                    col--;
-                break;
 
                 break;
 
@@ -143,11 +139,11 @@ int main() {
         answer[resindex++] = grid[row][col];
         index = 0;
         // printf("%d ", grid[row][col]);
-        printf("%d\n", answer[resindex - 1]);
+        printf("%c\n", answer[resindex - 1]);
     }
     int k = 0;
-    while (answer[k] != 0) {
-        printf("%d", answer[k++]);
+    while (answer[k] != '\0') {
+        printf("%c", answer[k++]);
     }
     return 0;
 }

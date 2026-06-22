@@ -18,7 +18,9 @@ int main(void) {
     int fileindex = 0;
     int lineindex = 0;
     int trictr = 0;
-    int edgea, edgeb, edgec;
+    int edgea1, edgeb1, edgec1;
+    int edgea2, edgeb2, edgec2;
+    int edgea3, edgeb3, edgec3;
     char *token;
     int objctr = 0;
     while (fileindex < filesize) {
@@ -41,26 +43,112 @@ int main(void) {
         // line = calloc(1, sizeof(temp));
         token = strtok(temp, " ");
         int side = atoi(token);
-        edgea = side;
+        edgea1 = side;
         objctr++;
         token = strtok(NULL, " ");
         while (token != NULL) {
 
             side = atoi(token);
             if (objctr % 3 == 1) {
-                edgeb = side;
+                edgeb1 = side;
 
             } else {
-                edgec = side;
+                edgec1 = side;
             }
             objctr++;
             token = strtok(NULL, " ");
         }
-        if (edgea + edgeb > edgec && edgeb + edgec > edgea &&
-            edgea + edgec > edgeb) {
+        if (edgea1 + edgeb1 > edgec1 && edgeb1 + edgec1 > edgea1 &&
+            edgea1 + edgec1 > edgeb1) {
             trictr++;
         }
     }
     printf("%d", trictr);
+    // part 2
+    fileindex = 0;
+    int howmany = 9;
+    while (fileindex < filesize) {
+
+        temp = calloc(25, sizeof(char));
+        while (buffer[fileindex] == '\n' || buffer[fileindex] == '\r' ||
+               buffer[fileindex] == ' ') {
+            fileindex++;
+        }
+
+        while (buffer[fileindex] != '\n' && fileindex < filesize &&
+               buffer[fileindex] != '\0') {
+            temp[lineindex++] = buffer[fileindex++];
+        }
+
+        temp[lineindex] = '\0';
+        lineindex = 0;
+        int len = strlen(temp);
+        line = malloc(strlen(temp) + 1);
+        strcpy(line, temp);
+        line[len - 1] = '\0';
+        token = strtok(line, " ");
+        int side = atoi(token);
+        if (objctr % 9 == 0) {
+            edgea1 = side;
+            objctr++;
+            token = strtok(NULL, " ");
+        }
+
+        while (token != NULL) {
+
+            side = atoi(token);
+            objctr %= 9;
+            switch (objctr) {
+            case 1:
+                edgeb1 = side;
+
+                break;
+            case 2:
+                edgec1 = side;
+                break;
+
+            case 3:
+                edgea2 = side;
+                break;
+            case 4:
+                edgeb2 = side;
+                break;
+            case 5:
+                edgec2 = side;
+                break;
+            case 6:
+                edgea3 = side;
+                break;
+            case 7:
+                edgeb3 = side;
+                break;
+            case 8:
+                edgec3 = side;
+                break;
+            }
+            objctr++;
+            token = strtok(NULL, " ");
+
+            if (objctr == 9) {
+
+                if (edgea1 + edgeb1 > edgec1 && edgea1 + edgec1 > edgeb1 &&
+                    edgeb1 + edgec1 > edgea1) {
+                    trictr++;
+                }
+
+                if (edgea2 + edgeb2 > edgec2 && edgea2 + edgec2 > edgeb2 &&
+                    edgeb2 && edgeb2 + edgec2 > edgea2) {
+                    trictr++;
+                }
+                if (edgea3 + edgeb3 > edgec3 && edgea3 + edgec3 > edgeb3 &&
+                    edgeb3 && edgeb3 + edgec3 > edgea3) {
+                    trictr++;
+                }
+                edgea1 = edgea2 = edgea3 = edgeb1 = edgeb2 = edgeb3 = edgec1 =
+                    edgec2 = edgec3 = 0;
+            }
+        }
+    }
+
     return 0;
 }

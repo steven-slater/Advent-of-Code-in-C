@@ -67,6 +67,7 @@ int main(void) {
     // part 2
     fileindex = 0;
     int howmany = 9;
+    trictr = 0;
     while (fileindex < filesize) {
 
         temp = calloc(25, sizeof(char));
@@ -80,12 +81,13 @@ int main(void) {
             temp[lineindex++] = buffer[fileindex++];
         }
 
-        temp[lineindex] = '\0';
+        if (temp[lineindex - 1] == '\r')
+            temp[lineindex - 1] = '\0';
         lineindex = 0;
         int len = strlen(temp);
-        line = malloc(strlen(temp) + 1);
+        line = malloc(len + 1);
         strcpy(line, temp);
-        line[len - 1] = '\0';
+        line[len] = '\0';
         token = strtok(line, " ");
         int side = atoi(token);
         if (objctr % 9 == 0) {
@@ -131,17 +133,17 @@ int main(void) {
 
             if (objctr == 9) {
 
-                if (edgea1 + edgeb1 > edgec1 && edgea1 + edgec1 > edgeb1 &&
-                    edgeb1 + edgec1 > edgea1) {
+                if (edgea1 + edgea2 > edgea3 && edgea1 + edgea3 > edgea2 &&
+                    edgea2 + edgea3 > edgea1) {
                     trictr++;
                 }
 
-                if (edgea2 + edgeb2 > edgec2 && edgea2 + edgec2 > edgeb2 &&
-                    edgeb2 && edgeb2 + edgec2 > edgea2) {
+                if (edgeb1 + edgeb2 > edgeb3 && edgeb2 + edgeb3 > edgeb1 &&
+                    edgeb1 + edgeb3 > edgeb2) {
                     trictr++;
                 }
-                if (edgea3 + edgeb3 > edgec3 && edgea3 + edgec3 > edgeb3 &&
-                    edgeb3 && edgeb3 + edgec3 > edgea3) {
+                if (edgec3 + edgec1 > edgec2 && edgec2 + edgec3 > edgec1 &&
+                    edgec1 + edgec2 > edgec3) {
                     trictr++;
                 }
                 edgea1 = edgea2 = edgea3 = edgeb1 = edgeb2 = edgeb3 = edgec1 =
@@ -149,6 +151,6 @@ int main(void) {
             }
         }
     }
-
+    printf("\n%d", trictr);
     return 0;
 }

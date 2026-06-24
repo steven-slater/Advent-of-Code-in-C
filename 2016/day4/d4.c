@@ -11,11 +11,22 @@ typedef struct {
     UT_hash_handle hh; // makes this struct hashable
 } Letter;
 Letter *table = NULL;
+int sort_by_count(Letter *a, Letter *b) {
+    if (b->count > a->count)
+        return 1;
+    if (b->count < a->count)
+        return -1;
+    return (strcmp(a->key, b->key));
+    // For ascending order, use: return (a->count - b->count);
+}
+
 int main(void) {
-    FILE *fp = fopen("s1.txt", "rb");
+    FILE *fp = fopen("p1.txt", "rb");
     if (fp == NULL) {
         perror("Can't open file");
     }
+    int counter = 0;
+    int checksum = 0;
     char *buffer;
     long filesize = 0;
     long fileindex = 0;
@@ -29,6 +40,8 @@ int main(void) {
     buffer = (char *)malloc(filesize + 1);
     fread(buffer, 1, filesize, fp);
     while (fileindex < filesize) {
+        lineindex = 0;
+        table = NULL;
         line = calloc(256, sizeof(char));
         while (buffer[fileindex] == '\n' || buffer[fileindex] == '\r') {
             fileindex++;
@@ -39,13 +52,13 @@ int main(void) {
             line[lineindex++] = buffer[fileindex++];
         }
 
-        //        line[lineindex] = '\0';
+        //   line[lineindex] = '\0';
         int len = strlen(line);
         printf("%s is %d bytes\n", line, len);
         for (int i = 0; i < len; i++) {
             char key = line[i];
             while (isdigit(key) == false) {
-                printf("%c", key);
+                //  printf("%c", key);
                 if (key == '-') {
                     i++;
                     key = line[i];
@@ -66,15 +79,55 @@ int main(void) {
                 i++;
                 key = line[i];
             }
+            // printf("\n");
             int index = 0;
+            HASH_SORT(table, sort_by_count);
+            char *used = calloc(10, sizeof(char));
+            Letter *el, *tmp;
+            HASH_ITER(hh, table, el, tmp) {
+
+                used[index++] = el->key[0];
+                printf("Key: %s, Count: %d\n", el->key, el->count);
+            }
+            index = 0;
             while (key != '[') {
                 numb[index++] = key;
                 i++;
                 key = line[i];
             }
             numb[index] = '\0';
+            i++;
+            key = line[i];
+            index = 0;
+            bool failed = false;
+
+            while (key != ']') {
+                while (index < 5) {
+                    char c = used[index];
+
+                    if (line[i] != c) {
+                        printf("%s is not a room\n", line);
+                        i++;
+                        failed = true;
+                        break;
+                    }
+                    index++;
+                    i++;
+                }
+
+                if (!failed) {
+                    checksum += atoi(numb);
+                    key = line[i];
+                    counter++;
+                    //     printf("%d\n", counter);
+                }
+                if (failed) {
+                    i = len;
+                    break;
+                }
+            }
         }
     }
-
+    printf("Checksum of valid rooms: %d\n", checksum);
     return 0;
 }

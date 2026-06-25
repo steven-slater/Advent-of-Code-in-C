@@ -21,7 +21,7 @@ int sort_by_count(Letter *a, Letter *b) {
 }
 
 int main(void) {
-    FILE *fp = fopen("p1.txt", "rb");
+    FILE *fp = fopen("s1.txt", "rb");
     if (fp == NULL) {
         perror("Can't open file");
     }
@@ -34,6 +34,7 @@ int main(void) {
     int lineindex = 0;
     char *token;
     char numb[25];
+    char *id;
     fseek(fp, 0, SEEK_END);
     filesize = ftell(fp);
     rewind(fp);
@@ -54,7 +55,7 @@ int main(void) {
 
         //   line[lineindex] = '\0';
         int len = strlen(line);
-        printf("%s is %d bytes\n", line, len);
+        // printf("%s is %d bytes\n", line, len);
         for (int i = 0; i < len; i++) {
             char key = line[i];
             while (isdigit(key) == false) {
@@ -87,7 +88,7 @@ int main(void) {
             HASH_ITER(hh, table, el, tmp) {
 
                 used[index++] = el->key[0];
-                printf("Key: %s, Count: %d\n", el->key, el->count);
+                //         printf("Key: %s, Count: %d\n", el->key, el->count);
             }
             index = 0;
             while (key != '[') {
@@ -96,8 +97,10 @@ int main(void) {
                 key = line[i];
             }
             numb[index] = '\0';
+            int num = atoi(numb);
             i++;
             key = line[i];
+            num %= 26;
             index = 0;
             bool failed = false;
 
@@ -128,6 +131,83 @@ int main(void) {
             }
         }
     }
+    char *alph = "abcdefghijklmnopqrstuvwxyz";
     printf("Checksum of valid rooms: %d\n", checksum);
+    fileindex = 0;
+    while (fileindex < filesize) {
+        lineindex = 0;
+        table = NULL;
+        line = calloc(256, sizeof(char));
+        while (buffer[fileindex] == '\n' || buffer[fileindex] == '\r') {
+            fileindex++;
+        }
+
+        while (buffer[fileindex] != '\n' && fileindex < filesize &&
+               buffer[fileindex] != '\0' && buffer[fileindex] != '\r') {
+            line[lineindex++] = buffer[fileindex++];
+        }
+        int llen = strlen(line);
+        char *answer = calloc(llen, sizeof(char));
+        int alptr = 0;
+        int index = 0;
+        int positions[256];
+        int count = 0;
+        counter = 0;
+        char *ptr = line;
+        while ((ptr = strchr(ptr, '-')) != NULL) {
+            positions[count++] = ptr - line;
+            counter++;
+            ptr++; // move past this '-' so strchr doesn't find it again
+        }
+        count = 0;
+        printf("%s is %d bytes\n", line, llen);
+        token = strtok(line, "-");
+        char *name = calloc(llen, sizeof(char));
+        strcpy(name, token);
+        while (token != NULL) {
+            token = strtok(NULL, "-");
+            if (isdigit(token[0]) == false) {
+                strcat(name, token);
+            } else {
+                id = calloc(llen, sizeof(char));
+
+                strcpy(id, token);
+                token = strtok(id, "[]");
+                strcpy(id, token);
+                break;
+            }
+            token = strtok(NULL, "-");
+        }
+
+        int dash = 0;
+        int spaceindex = positions[dash];
+        int namelen = strlen(name);
+        for (int i = 0; i < namelen; i++) {
+            if (i == spaceindex) {
+                answer[spaceindex] = ' ';
+                dash++;
+                spaceindex = positions[dash];
+                printf("%s", answer);
+            }
+            char key = name[i];
+            for (int q = 0; q < 26; q++) {
+                if (key == alph[q]) {
+                    alptr = q;
+
+                    int number = atoi(id);
+                    int tnum = alptr * number;
+                    tnum %= 26;
+                    answer[index] = alph[(alptr + number) % 26];
+                    index++;
+                    break;
+                }
+            }
+        }
+        printf("%s\n", answer);
+        free(line);
+        free(answer);
+        free(name);
+        free(id);
+    }
     return 0;
 }

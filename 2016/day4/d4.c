@@ -46,6 +46,7 @@ int main(void) {
     char *token;
     char numb[25];
     char *id;
+    int linecount = 0;
     fseek(fp, 0, SEEK_END);
     filesize = ftell(fp);
     rewind(fp);
@@ -53,6 +54,10 @@ int main(void) {
     fread(buffer, 1, filesize, fp);
     while (fileindex < filesize) {
         lineindex = 0;
+        linecount++;
+        if (linecount == 330) {
+            printf("\n");
+        }
         table = NULL;
         line = calloc(256, sizeof(char));
 
@@ -64,10 +69,10 @@ int main(void) {
                buffer[fileindex] != '\0' && buffer[fileindex] != '\r') {
             line[lineindex++] = buffer[fileindex++];
         }
-
+        printf("%zu %d\n", strlen(line), linecount);
         line[lineindex] = '\0';
         int len = strlen(line);
-        printf("%s is %d bytes\n", line, len);
+        //  printf("%s is %d bytes\n", line, len);
         //     fprintf(fout, "%s\n", line);
         for (int i = 0; i < len; i++) {
             char key = line[i];
@@ -93,7 +98,7 @@ int main(void) {
                 i++;
                 key = line[i];
             }
-            printTable(table);
+            //    printTable(table);
             // printf("\n");
             int index = 0;
             HASH_SORT(table, sort_by_count);
@@ -123,7 +128,7 @@ int main(void) {
                     char c = used[index];
 
                     if (line[i] != c) {
-                        printf("%s is not a room\n", line);
+                        //  printf("%s is not a room\n", line);
                         i++;
                         failed = true;
                         break;
@@ -137,7 +142,7 @@ int main(void) {
                     key = line[i];
                     counter++;
                     //     printf("%d\n", counter);
-                    printf("VALID ROOM: %s\n", line);
+                    //            printf("VALID ROOM: %s\n", line);
                     fprintf(fout, "%s\n", line);
                 }
                 if (failed) {
@@ -154,7 +159,8 @@ int main(void) {
     fseek(fp, 0, SEEK_END);
     filesize = ftell(fp);
     rewind(fp);
-
+    fout = fopen("answer.txt", "wb+");
+    linecount = 0;
     buffer = (char *)malloc(filesize + 1);
     long bytesread = fread(buffer, 1, filesize, fp);
 
@@ -173,8 +179,15 @@ int main(void) {
                buffer[fileindex] != '\0' && buffer[fileindex] != '\r') {
             line[lineindex++] = buffer[fileindex++];
         }
+        linecount++;
+        if (linecount == 330) {
+            printf("\n");
+        }
         int llen = strlen(line);
-        char *answer = calloc(llen, sizeof(char));
+        char *answer = calloc(llen + 1, sizeof(char));
+        char *answerkey = calloc(llen + 1, sizeof(char));
+        char *oldline = calloc(llen + 1, sizeof(char));
+        strcpy(oldline, line);
         int alptr = 0;
         // int index = 0;
         int positions[256];
@@ -187,9 +200,12 @@ int main(void) {
             ptr++; // move past this '-' so strchr doesn't find it again
         }
         count = 0;
-        printf("%s is %d bytes\n", line, llen);
+        //        printf("%s is %d bytes\n", line, llen);
         token = strtok(line, "-");
-        char *name = calloc(llen, sizeof(char));
+        char *name = calloc(100, sizeof(char));
+        if (token == NULL) {
+            break;
+        }
         strcpy(name, token);
         strcat(name, " ");
         while (token != NULL) {
@@ -199,9 +215,9 @@ int main(void) {
                 strcat(name, " ");
             } else {
                 id = calloc(llen, sizeof(char));
-
-                strcpy(id, token);
-                token = strtok(id, "[]");
+                char temp[100];
+                strcpy(temp, token);
+                token = strtok(temp, "[");
                 strcpy(id, token);
                 break;
             }
@@ -209,15 +225,9 @@ int main(void) {
         }
 
         int dash = 0;
-        int spaceindex = positions[dash];
+        int ansindex = 0;
         int namelen = strlen(name);
         for (int i = 0; i < namelen; i++) {
-            // if (i == spaceindex) {
-            //     answer[spaceindex] = ' ';
-            //     dash++;
-            //     spaceindex = positions[dash];
-            //     printf("%s", answer);
-            // }
 
             char key = name[i];
             if (key == ' ') {
@@ -232,16 +242,24 @@ int main(void) {
                     int tnum = alptr * number;
                     tnum %= 26;
                     answer[i] = alph[(alptr + number) % 26];
-
                     break;
                 }
             }
         }
-        printf("%s\n", answer);
+        // printf("%s\n", oldline);
+        // printf("%s\n", answer);
+        char ans[512];
+        strcpy(ans, oldline);
+        strcat(ans, " ");
+        strcat(ans, answer);
+        printf("%s\n", ans);
+        fprintf(fout, "%s\n", ans);
         free(line);
         free(answer);
         free(name);
         free(id);
     }
+    fflush(fout);
+    fclose(fout);
     return 0;
 }

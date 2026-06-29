@@ -13,12 +13,14 @@ Columns *col2 = NULL;
 Columns *col3 = NULL;
 Columns *col4 = NULL;
 Columns *col5 = NULL;
+Columns *col6 = NULL;
+Columns *col7 = NULL;
 int sort_by_count(Columns *a, Columns *b) {
     if (b->count > a->count)
-        return 1;
-    if (b->count < a->count)
         return -1;
-    return (a->key > b->key);
+    if (b->count < a->count)
+        return 1;
+    return (a->key - b->key);
     // For ascending order, use: return (a->count - b->count);
 }
 void printTable(Columns *table) {
@@ -48,7 +50,7 @@ void main() {
     char *line;
     while (fileindex < filesize) {
 
-        line = calloc(7, sizeof(char));
+        line = calloc(9, sizeof(char));
         lineindex = 0;
         if (line == NULL) {
             perror("calloc");
@@ -76,8 +78,8 @@ void main() {
                 } else {
                     found->count++;
                 }
-                printf("Col0\n");
-                printTable(col0);
+                //           printf("Col0\n");
+                //         printTable(col0);
                 break;
             case 1:
                 HASH_FIND(hh, col1, &c, sizeof(char), found);
@@ -91,8 +93,8 @@ void main() {
                 } else {
                     found->count++;
                 }
-                printf("Col1\n");
-                printTable(col1);
+                //               printf("Col1\n");
+                //             printTable(col1);
 
                 break;
             case 2:
@@ -107,8 +109,8 @@ void main() {
                 } else {
                     found->count++;
                 }
-                printf("Col2\n");
-                printTable(col2);
+                //  printf("Col2\n");
+                // printTable(col2);
 
                 break;
             case 3:
@@ -123,8 +125,8 @@ void main() {
                 } else {
                     found->count++;
                 }
-                printf("Col3\n");
-                printTable(col3);
+                //       printf("Col3\n");
+                //      printTable(col3);
 
                 break;
             case 4:
@@ -139,8 +141,8 @@ void main() {
                 } else {
                     found->count++;
                 }
-                printf("Col4\n");
-                printTable(col4);
+                //   printf("Col4\n");
+                // printTable(col4);
 
                 break;
             case 5:
@@ -155,8 +157,42 @@ void main() {
                 } else {
                     found->count++;
                 }
-                printf("Col5\n");
-                printTable(col5);
+                //  printf("Col5\n");
+                //    printTable(col5);
+
+                break;
+
+            case 6:
+                HASH_FIND(hh, col6, &c, sizeof(char), found);
+                if (found == NULL) {
+                    Columns *entry = calloc(1, sizeof(Columns));
+                    entry->key = c;
+
+                    entry->count++;
+                    HASH_ADD(hh, col6, key, sizeof(char), entry);
+
+                } else {
+                    found->count++;
+                }
+                //         printf("Col6\n");
+                //    printTable(col6);
+
+                break;
+
+            case 7:
+                HASH_FIND(hh, col7, &c, sizeof(char), found);
+                if (found == NULL) {
+                    Columns *entry = calloc(1, sizeof(Columns));
+                    entry->key = c;
+
+                    entry->count++;
+                    HASH_ADD(hh, col7, key, sizeof(char), entry);
+
+                } else {
+                    found->count++;
+                }
+                //   printf("Col7\n");
+                //        printTable(col7);
 
                 break;
             default:
@@ -166,13 +202,13 @@ void main() {
             line[lineindex++] = buffer[fileindex++];
         }
 
-        printf("%s\n", line);
+        //   printf("%s\n", line);
         // free(line);
     }
     int index = 0;
     Columns *el, *tmp;
     HASH_SORT(col0, sort_by_count);
-
+    printTable(col0);
     HASH_ITER(hh, col0, el, tmp) {
         answer[index] = el->key;
         index++;
@@ -204,6 +240,19 @@ void main() {
     }
     HASH_SORT(col5, sort_by_count);
     HASH_ITER(hh, col5, el, tmp) {
+        answer[index] = el->key;
+        index++;
+        break;
+    }
+
+    HASH_SORT(col6, sort_by_count);
+    HASH_ITER(hh, col6, el, tmp) {
+        answer[index] = el->key;
+        index++;
+        break;
+    }
+    HASH_SORT(col7, sort_by_count);
+    HASH_ITER(hh, col7, el, tmp) {
         answer[index] = el->key;
         index++;
         break;

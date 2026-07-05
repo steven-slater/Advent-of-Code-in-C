@@ -205,9 +205,8 @@ int main(void) {
             line[lineindex++] = buffer[fileindex++];
         }
         int len = strlen(line);
-
-        printf("%s\n", line);
         lineindex = 0;
+        int start = 0;
         while (lineindex < len) {
             char *part = calloc(256, sizeof(char));
             int partindex = 0;
@@ -215,114 +214,62 @@ int main(void) {
                 part[partindex++] = line[lineindex++];
             }
             part[partindex] = '\0';
-            Address *addr = calloc(1, sizeof(Address));
+            char ip[4];
+            start = 0;
 
-            addr->key = strdup(part);
-            addr->bracket = false;
+            int end = strlen(part - 2);
+            int plen = strlen(part);
+            for (int j = 0; j < plen - 1; j++) {
+                if (part[start] == part[start + 2] &&
+                    part[start] != part[start + 1]) {
+                    ip[0] = part[start + 1];
+                    ip[1] = part[start + 2];
+                    ip[2] = part[start + 1];
+                    ip[3] = '\0';
 
-            HASH_ADD_KEYPTR(hh, aba, addr->key, strlen(part), addr);
-            for (Address *current = aba; current != NULL;
-                 current = current->hh.next) {
-                printf("key: '%s' value: %d\n", current->key, current->bracket);
+                    Address *addr = calloc(1, sizeof(Address));
+                    addr->key = strdup(ip);
+                    addr->bracket = 0;
+                    start++;
+                    HASH_ADD_KEYPTR(hh, nobrak, addr->key, strlen(part), addr);
+                    for (Address *current = nobrak; current != NULL;
+                         current = current->hh.next) {
+                        printf("key: '%s' value: %d\n", current->key,
+                               current->bracket);
+                    }
+                    continue;
+                }
+
+                else {
+                    start++;
+                }
             }
-            part = calloc(256, sizeof(char));
-            partindex = 0;
-
-            int start = 0;
             lineindex++; // move past [
             if (lineindex >= len)
                 break;
             else {
+                char *part = calloc(256, sizeof(char));
+                partindex = 0;
                 while (lineindex < len && line[lineindex] != ']') {
                     part[partindex++] = line[lineindex++];
                 }
-
-                addr = calloc(1, sizeof(Address));
-                addr->key = strdup(part);
-                addr->bracket = true;
-
-                HASH_ADD_KEYPTR(hh, bab, addr->key, strlen(part), addr);
-                lineindex++; // move past ]
-            }
-        }
-        int start = 0;
-        int end = 0;
-        char *test;
-        // process tables
-        if (HASH_COUNT(bab) > 1) {
-            HASH_SORT(bab, sort_by_key);
-        }
-        for (Address *current = bab; current != NULL;
-             current = current->hh.next) {
-            test = calloc(strlen(current->key + 1), sizeof(char));
-            strcpy(test, current->key);
-            start = 0;
-            end = strlen(test) - 2;
-            for (int i = 0; i < end; i++) {
-                //     printf("%s\n", test + i);
-                if (test[start] == test[start + 2] &&
-                    test[start] != test[start + 1]) {
-                    BAB = true;
-                    //  free(test);
-                    break;
-
-                } else {
-                    start++;
-                }
-            }
-        }
-        if (HASH_COUNT(aba) > 1) {
-            HASH_SORT(aba, sort_by_key);
-        }
-        //    freeTable(&bab);
-
-        if (BAB == true) {
-            BAB = false;
-            for (Address *current = aba; current != NULL;
-                 current = current->hh.next) {
-
-                //   printf("key: '%s' value: %d\n", current->key,
-                //   current->bracket);
-                test = calloc(strlen(current->key) + 1, sizeof(char));
-                strcpy(test, current->key);
                 start = 0;
-                end = strlen(test) - 3;
-                for (int i = 0; i < end; i++) {
-                    //                    printf("%s\n", test + i);
-                    if (test[start] == test[start + 2] &&
-                        test[start] != test[start + 1]) {
-                        ABA = true;
-                        // printf("WINNER: %s\n", test + i);
+                plen = strlen(part);
+                for (int j = 0; j < plen - 1; j++) {
+                    if (part[start] == part[start + 2] &&
+                        part[start] != part[start + 1]) {
+                        ip[0] = part[start + 1];
+                        ip[1] = part[start + 2];
+                        ip[2] = part[start + 1];
+                        ip[3] = '\0';
 
-                        Address *found;
-                        char *ip;
-                        ip = strdup(current->key);
-                        printf("%s\n", ip);
-                        ip[0] = ip[1];
-                        ip[1] = ip[2];
-                        ip[2] = ip[0];
-                        HASH_FIND(hh, bab, &current, sizeof(char), found);
-
-                    } else {
-
-                        start++;
+                        Address *found = NULL;
+                        HASH_FIND(hh, nobrak, ip, strlen(ip), found);
+                        if (found != NULL) {
+                            count++;
+                        }
+                        lineindex++; // move past ]
                     }
                 }
-                if (valid)
-                    break;
             }
-            free(test);
         }
-        if (valid) {
-
-            freeTable(&aba);
-            count++;
-        }
-        if (nobrak != NULL) {
-            freeTable(&aba);
-        }
-        free(line);
-        valid = true;
-    }
-    return 0;
-}

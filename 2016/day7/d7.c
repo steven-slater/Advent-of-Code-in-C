@@ -219,7 +219,7 @@ int main(void) {
 
             int end = strlen(part - 2);
             int plen = strlen(part);
-            for (int j = 0; j < plen - 1; j++) {
+            for (int j = 0; j < plen - 2; j++) {
                 if (part[start] == part[start + 2] &&
                     part[start] != part[start + 1]) {
                     ip[0] = part[start + 1];
@@ -230,24 +230,28 @@ int main(void) {
                     Address *addr = calloc(1, sizeof(Address));
                     addr->key = strdup(ip);
                     addr->bracket = 0;
-                    start++;
-                    HASH_ADD_KEYPTR(hh, nobrak, addr->key, strlen(part), addr);
+
+                    HASH_ADD_KEYPTR(hh, nobrak, addr->key, strlen(addr->key),
+                                    addr);
+                    // Address *found = NULL;
+                    // HASH_FIND(hh, nobrak, addr->key, strlen(addr->key),
+                    // found); if (found != NULL) {
+                    //     printf("%s\n", addr->key);
+                    // }
                     for (Address *current = nobrak; current != NULL;
                          current = current->hh.next) {
                         printf("key: '%s' value: %d\n", current->key,
                                current->bracket);
                     }
-                    continue;
+                    // continue;
                 }
-
-                else {
-                    start++;
-                }
+                start++;
             }
             lineindex++; // move past [
-            if (lineindex >= len)
+            if (lineindex >= len) {
+                freeTable(&nobrak);
                 break;
-            else {
+            } else {
                 char *part = calloc(256, sizeof(char));
                 partindex = 0;
                 while (lineindex < len && line[lineindex] != ']') {
@@ -255,21 +259,24 @@ int main(void) {
                 }
                 start = 0;
                 plen = strlen(part);
-                for (int j = 0; j < plen - 1; j++) {
+                for (int j = 0; j < plen - 2; j++) {
                     if (part[start] == part[start + 2] &&
                         part[start] != part[start + 1]) {
-                        ip[0] = part[start + 1];
-                        ip[1] = part[start + 2];
-                        ip[2] = part[start + 1];
-                        ip[3] = '\0';
+                        Address *addr = calloc(1, sizeof(Address));
+                        addr->key = strdup(part);
+                        addr->bracket = 1;
 
                         Address *found = NULL;
-                        HASH_FIND(hh, nobrak, ip, strlen(ip), found);
+                        HASH_FIND(hh, nobrak, addr->key, strlen(addr->key),
+                                  found);
                         if (found != NULL) {
                             count++;
                         }
-                        lineindex++; // move past ]
                     }
+                    start++;
                 }
+                lineindex++; // move past ]
             }
         }
+    }
+}

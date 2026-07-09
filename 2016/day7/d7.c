@@ -15,7 +15,7 @@ typedef struct {
 Address *nobrak = NULL;
 Address *inbrak = NULL;
 Address *bab = NULL;
-Address *aba = NULL;
+// Address *aba = NULL;
 int sort_by_key(Address *a, Address *b) {
     return (a->key > b->key);
     // For ascending order, use: return (a->count - b->count);
@@ -171,10 +171,11 @@ int main(void) {
 
     printf("Part1: %d are valid\n", count);
     count = 0;
-    FILE *fd = fopen("s2.txt", "rb");
+    FILE *fd = fopen("p1.txt", "rb");
     if (fd == NULL) {
         perror("Can't open file");
     }
+    FILE *fout = fopen("out.txt", "w+");
     count = 0;
     int linectr = 0;
     bool ABA = true;
@@ -188,7 +189,7 @@ int main(void) {
     if (bytesread != filesize) {
         perror("fread");
     }
-    int answ[256];
+    int answ[512];
     int index = 0;
     fileindex = 0;
     while (fileindex < filesize) {
@@ -246,57 +247,75 @@ int main(void) {
             //  lineindex++; // move past ]
             if (lineindex >= len) {
                 linectr++;
+                if (linectr >= 255)
+                    printf("\n");
                 brcount = HASH_COUNT(inbrak);
                 nbcount = HASH_COUNT(nobrak);
                 Address *found = NULL;
                 if (brcount > 0) {
 
                     if (nbcount > 0) {
-                        printf("NoBracket\n");
+                        //   printf("NoBracket\n");
                         for (Address *current = nobrak; current != NULL;
                              current = current->hh.next) {
-                            printf("key: '%s' value: %d\n", current->key,
-                                   current->bracket);
+                            //   printf("key: '%s' value: %d\n", current->key,
+                            //        current->bracket);
                         }
                     }
                     if (brcount > 0) {
                         for (Address *current = inbrak; current != NULL;
                              current = current->hh.next) {
-                            printf("key: '%s' value: %d\n", current->key,
-                                   current->bracket);
+                            // printf("key: '%s' value: %d\n", current->key,
+                            //      current->bracket);
                         }
                     }
                     if (brcount > 0 && nbcount > 0) {
                         for (Address *current = inbrak; current != NULL;
                              current = current->hh.next) {
-                            printf("Look for: %s\n", current->key);
+                            //                            printf("Look for:
+                            //                            %s\n", current->key);
                             HASH_FIND(hh, nobrak, current->key, 3, found);
                             if (found != NULL) {
-                                printf("Found:         %s on line %d\n",
-                                       current->key, linectr);
+
+                                //                                printf("Found:
+                                //                                %s on line
+                                //                                %d\n",
+                                //                                     current->key,
+                                //                                     linectr);
                                 answ[index++] = linectr;
                                 count++;
+
+                                fprintf(fout, "%s\n", line);
+                            }
+                            if (found != NULL) {
+                                break;
                             }
                         }
                     }
                 }
+
                 if (nbcount > 0)
                     freeTable(&nobrak);
 
                 if (brcount > 0)
                     freeTable(&inbrak);
-
+                //    if (HASH_COUNT(bab) > 0)
+                freeTable(&bab);
                 break;
             } else {
                 while (lineindex < len && line[lineindex] != ']') {
                     char *part = calloc(256, sizeof(char));
                     for (int k = 0; k < 3; k++) {
-                        part[k] = line[lineindex + k];
-                        if (line[lineindex] == ']') {
-                            break;
-                        }
+                        if (line[lineindex + k] == ']') {
+                            continue;
+                        } else
+                            part[k] = line[lineindex + k];
                     }
+                    if (strlen(part) < 3)
+                        break;
                     lineindex++;
+                    //    printf("%s\n", part);
+
                     start = 0;
                     plen = strlen(part);
                     for (int j = 0; j < plen - 2; j++) {
@@ -315,4 +334,5 @@ int main(void) {
         }
     }
     printf("%d\n", count);
+    fclose(fout);
 }

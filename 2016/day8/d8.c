@@ -15,11 +15,10 @@ typedef struct {
 } PointMap;
 
 PointMap *grid = NULL;
-void add_location(int x, int y, bool state) {
+PointMap *gcopy = NULL;
+void add_location(PointMap **table, int x, int y, bool state) {
     PointMap *item;
 
-    // RULE 2: Use calloc (or memset) to guarantee all hidden padding bytes are
-    // 0
     item = calloc(1, sizeof(PointMap));
     if (!item)
         return;
@@ -27,44 +26,28 @@ void add_location(int x, int y, bool state) {
     item->key.x = x;
     item->key.y = y;
     item->state = state;
-    // strncpy(item->location_name, name, sizeof(item->location_name) - 1);
 
-    // HASH_ADD(handle, head, key_field_name, key_length_in_bytes, item_ptr)
-    HASH_ADD(hh, grid, key, sizeof(PointKey), item);
+    HASH_ADD(hh, *table, key, sizeof(PointKey), item);
 }
-/**
- * Looks up an element using an inline composite coordinate key
- */
-PointMap *find_location(int x, int y) {
+
+PointMap *find_location(PointMap **table, int x, int y) {
     PointMap *result = NULL;
 
-    // Create a temporary key lookup block and zero it out completely
     PointKey lookup_key;
     memset(&lookup_key, 0, sizeof(PointKey));
     lookup_key.x = x;
     lookup_key.y = y;
 
-    // HASH_FIND(handle, head, ptr_to_lookup_key, key_length_in_bytes, out_ptr)
-    HASH_FIND(hh, grid, &lookup_key, sizeof(PointKey), result);
+    HASH_FIND(hh, *table, &lookup_key, sizeof(PointKey), result);
     return result;
 }
-void turn_on_pixels(int wide, int tall) {
-    PointMap *result;
-    for (int i = 0; i < tall; i++) {
-        for (int j = 0; j < wide; j++) {
-            result = find_location(i, j);
-            result->state = 1;
-            printf("%d", result->state);
-        }
-        printf("\n");
-    }
-}
-void print_grid(int wide, int tall) {
+
+void print_grid(PointMap **table, int wide, int tall) {
     PointMap *result;
     printf("\n");
     for (int i = 0; i < tall; i++) {
         for (int j = 0; j < wide; j++) {
-            result = find_location(i, j);
+            result = find_location(table, i, j);
             if (result != NULL) {
                 printf("%d", result->state);
             } else {
@@ -74,15 +57,29 @@ void print_grid(int wide, int tall) {
         printf("\n");
     }
 }
+void turn_on_pixels(PointMap **table, int wide, int tall) {
+    PointMap *result;
+    for (int i = 0; i < tall; i++) {
+        for (int j = 0; j < wide; j++) {
+            result = find_location(table, i, j);
+            result->state = 1;
+            printf("%d", result->state);
+        }
+        printf("\n");
+    }
+}
+
+void move_pixels_bycol(int col, int amount) { int row = 0; }
+
 int main() {
     int ROWMAX = 3;
     int COLMAX = 7;
     int row = 0;
     int col = 0;
-    int grid[7][3];
-    // add_location(10, 20, 1);
-    // add_location(5, -12, 1);
-    // add_location(0, 0, 1);
+    // int grid[7][3];
+    //  add_location(10, 20, 1);
+    //  add_location(5, -12, 1);
+    //  add_location(0, 0, 1);
 
     // Search for a specific coordinate tuple
     // int search_x = 5;
@@ -98,10 +95,11 @@ int main() {
 
     for (int i = 0; i < ROWMAX; i++) {
         for (int j = 0; j < COLMAX; j++) {
-            add_location(i, j, 0);
+            add_location(&grid, i, j, 0);
+            add_location(&gcopy, i, j, 0);
         }
     }
-    print_grid(COLMAX, ROWMAX);
+    print_grid(&grid, COLMAX, ROWMAX);
     FILE *fp = fopen("s1.txt", "rb");
     long filesize = 0;
     fseek(fp, 0, SEEK_END);
@@ -147,14 +145,22 @@ int main() {
                 // RECT command, turn on pixels
                 int successfully_parsed = sscanf(token, "%dx%d", &col, &row);
                 printf("%dx%d\n", col, row);
-                turn_on_pixels(col, row);
-                print_grid(COLMAX, ROWMAX);
+                turn_on_pixels(&grid, col, row);
+                print_grid(&grid, COLMAX, ROWMAX);
             } else {
-                printf("ROTATE");
+                char *temp = strdup(token);
+                char ch = temp[0];
+
                 // col or row?
-                switch (token[0]) {
+                switch (ch) {
                 case 'c':
-                    /* code */
+                    token = strtok(NULL, "=");
+                    token = strtok(NULL, " ");
+                    col = atoi(token);
+                    token = strtok(NULL, " ");
+                    token = strtok(NULL, " ");
+                    amount = atoi(token);
+                    move_pixels_bycol(col, amount);
                     break;
 
                 default:

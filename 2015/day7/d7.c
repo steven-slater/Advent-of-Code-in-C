@@ -61,7 +61,7 @@ int evalwire(char *wire, Wires *registers, Memo **keyvaluepair) {
     if (found) {
         return found->value;
     }
-    if (isdigit((unsigned char)wire[0])) {
+    if ( ((unsigned char)wire[0])) {
         return atoi(wire);
     }
 

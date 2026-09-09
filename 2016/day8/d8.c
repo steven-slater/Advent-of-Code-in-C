@@ -4,19 +4,22 @@
 #include <string.h>
 #include <ctype.h>
 #include "uthash.h"
+#define MAXR 3
+#define MAXC 7
+//Compound key
 typedef struct {
     int x;
     int y;
 } PointKey;
 typedef struct {
     PointKey key;
-    bool state;
+    char state;
     UT_hash_handle hh;
 } PointMap;
 
 PointMap *grid = NULL;
 PointMap *gcopy = NULL;
-void add_location(PointMap **table, int x, int y, bool state) {
+void add_location(PointMap **table, int x, int y, char state) {
     PointMap *item;
 
     item = calloc(1, sizeof(PointMap));
@@ -49,7 +52,7 @@ void print_grid(PointMap **table, int wide, int tall) {
         for (int j = 0; j < wide; j++) {
             result = find_location(table, i, j);
             if (result != NULL) {
-                printf("%d", result->state);
+                printf("%c", result->state);
             } else {
                 printf("Error at: (%d %d)", i, j);
             }
@@ -62,15 +65,42 @@ void turn_on_pixels(PointMap **table, int wide, int tall) {
     for (int i = 0; i < tall; i++) {
         for (int j = 0; j < wide; j++) {
             result = find_location(table, i, j);
-            result->state = 1;
-            printf("%d", result->state);
+            result->state = '#';
+            //     printf("%c", result->state);
         }
         printf("\n");
     }
 }
 
-void move_pixels_bycol(int col, int amount) { int row = 0; }
-
+void move_pixels_bycol(PointMap **table, int col, int amount) {
+    int row = 0;
+    int newrow = row;
+    int hashcount = 0;
+    for (int r = 0; r < MAXR; r++) {
+        if (find_location(&gcopy, col, row) != NULL) {
+            hashcount++;
+        }
+    }
+    for (row = 0; hashcount > 0; hashcount--) {
+        newrow = (row + amount) % MAXR;
+    }
+}
+void move_pixels_byrow(PointMap **table, int row, int amount) {
+    print_grid(&gcopy, MAXC, MAXR);
+    int col = 0;
+    int newcol = col;
+    int hashcount = 0;
+    for (int r = 0; r < MAXC; r++) {
+        PointMap *found;
+        found = find_location(&gcopy, col, row);
+        if (found != NULL && found->state == '#') {
+            hashcount++;
+        }
+    }
+    for (row = 0; hashcount > 0; hashcount--) {
+        newcol = (col + amount) % MAXC;
+    }
+}
 int main() {
     int ROWMAX = 3;
     int COLMAX = 7;
@@ -95,12 +125,12 @@ int main() {
 
     for (int i = 0; i < ROWMAX; i++) {
         for (int j = 0; j < COLMAX; j++) {
-            add_location(&grid, i, j, 0);
-            add_location(&gcopy, i, j, 0);
+            add_location(&grid, i, j, '.');
+            add_location(&gcopy, i, j, '.');
         }
     }
     print_grid(&grid, COLMAX, ROWMAX);
-    FILE *fp = fopen("s1.txt", "rb");
+    FILE *fp = fopen("p1.txt", "rb");
     long filesize = 0;
     fseek(fp, 0, SEEK_END);
     filesize = ftell(fp);
@@ -144,7 +174,7 @@ int main() {
             if (isdigit((unsigned char)token[0])) {
                 // RECT command, turn on pixels
                 int successfully_parsed = sscanf(token, "%dx%d", &col, &row);
-                printf("%dx%d\n", col, row);
+                //   printf("%dx%d\n", col, row);
                 turn_on_pixels(&grid, col, row);
                 print_grid(&grid, COLMAX, ROWMAX);
             } else {
@@ -160,7 +190,16 @@ int main() {
                     token = strtok(NULL, " ");
                     token = strtok(NULL, " ");
                     amount = atoi(token);
-                    move_pixels_bycol(col, amount);
+                    move_pixels_bycol(&grid, col, amount);
+                    break;
+                case 'r':
+                    token = strtok(NULL, "=");
+                    token = strtok(NULL, " ");
+                    col = atoi(token);
+                    token = strtok(NULL, " ");
+                    token = strtok(NULL, " ");
+                    amount = atoi(token);
+                    move_pixels_byrow(&grid, col, amount);
                     break;
 
                 default:

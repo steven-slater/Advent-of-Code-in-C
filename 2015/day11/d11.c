@@ -8,11 +8,11 @@ typedef struct {
     int value;
     int index;
     UT_hash_handle hh; // makes this struct hashable
-} Entry;
+} Ruleset;
 
-Entry *table = NULL;
-void printTable(Entry *table) {
-    Entry *current, *tmp;
+Ruleset *table = NULL;
+void printTable(Ruleset *table) {
+    Ruleset *current, *tmp;
     HASH_ITER(hh, table, current, tmp) {
         printf("key: '%s' value: %d\n", current->key, current->value);
     }
@@ -62,12 +62,12 @@ int main() {
             c = buffer[index];
         }
         if (isValid && hasDouble && hasTriple) {
-            Entry *entry;
+            Ruleset *entry;
             HASH_FIND_STR(table, buffer, entry);
             if (entry) {
                 entry->value++;
             } else {
-                entry = (Entry *)malloc(sizeof(Entry));
+                entry = (Ruleset *)malloc(sizeof(Ruleset));
                 strncpy(entry->key, buffer, sizeof(entry->key) - 1);
                 entry->key[sizeof(entry->key) - 1] =
                     '\0'; // Ensure null-termination

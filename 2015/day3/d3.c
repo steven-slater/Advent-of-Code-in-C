@@ -12,7 +12,7 @@ int main()
     }
 
     // Coord *visited = calloc(t, sizeof(Coord));
-    FILE *fp = fopen("p1.txt", "r");
+    FILE *fp = fopen("p1.txt", "rb");
 
     // Get file size
     fseek(fp, 0, SEEK_END);

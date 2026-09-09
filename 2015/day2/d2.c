@@ -11,7 +11,7 @@ int compare_int(const void *a, const void *b)
 }
 int main()
 {
-  FILE *fp = fopen("s1.txt", "r");
+  FILE *fp = fopen("s1.txt", "rb");
   char buffer[100];
   int pints[3];
   if (fp == NULL)

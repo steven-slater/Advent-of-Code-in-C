@@ -1,0 +1,345 @@
+Before you leave, you are granted a map of the city (your puzzle input).
+
+The map is a grid of arrows, where each arrow represents the direction of the street at that location.
+
+For example:
+
+>>>>vvv>vv
+>^>>>>>>>v
+>>^<>vvv>v
+^^^>>vv>^v
+^<<<v>vv>v
+^<>^<>v>v<
+>^^<<<<<vv
+^^^<^v<<>v
+^v<^<<vvvv
+^<^<<<<<<<
+You begin in the top-left corner of the map.
+
+From each street, you may only drive in the direction indicated by the arrow.
+
+The first street you are in (top-left) is marked >, this means you have to drive to the street on the right of it.
+
+After following four right-pointing streets, you arrive at a street marked v, forcing you to continue downward instead.
+Eventually, you'll arrive at a street you've already visited. At that point, you've entered a loop and will never reach any new streets.
+Your task is to determine how many distinct streets you visit before visiting a street you already visited before.
+For the example above, you visit 45 distinct streets before visiting a street you've already visited before.
+
+The streets are designed in such a way that no arrow ever points towards the outside of the grid. (You truly can never leave)
+How many distinct streets do you visit before revisiting a street?
+Your answer was: 241
+
+-= Part 2: Connections With The Mayor =-
+To maximize customer satisfaction, the mayor of the city has made a deal with the company, you are allowed to change one singular street's direction to a different direction.
+There is one restriction though, the street you change may not be on the edge of the map. (again, you truly can never leave)
+Consider every possible valid change and determine which one lets you visit the largest number of distinct streets before revisiting a street.
+For the example, the following changes improve the result:
+
+Changing the street at row 2, column 4 from > to v results in 46 visited
+Changing the street at row 2, column 8 from > to ^ or v results in 47 visited
+Changing the street at row 6, column 2 from < to > results in 49 visited
+Changing the street at row 7, column 2 from ^ to > also results in 49 visited
+Every other valid change either leaves the result unchanged or even make the score worse.
+
+The best possible result for the example is 49.
+
+What is the maximum number of distinct streets you can visit if you're allowed to change the direction of exactly one non-edge street?
+
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <stdbool.h>
+
+// #define ROW_COUNT 50
+// #define COL_COUNT 50
+#define ROW_COUNT 10
+#define COL_COUNT 10
+#define QUEUE_CAPACITY COL_COUNT *ROW_COUNT
+typedef struct {
+    int row;
+    int col;
+    char orig; // original direction
+} Changes;
+Changes changethese[(ROW_COUNT - 2) * (COL_COUNT - 2)];
+
+// 1. Struct to holdtcoordinates and the step count
+typedef struct {
+    int row;
+    int col;
+    int steps;
+} Point;
+
+// 2. Circular Queue implementation for Point structs
+typedef struct {
+    Point data[QUEUE_CAPACITY];
+    int head;
+    int tail;
+    int size;
+} Queue;
+
+void queue_init(Queue *q) {
+    q->head = 0;
+    q->tail = 0;
+    q->size = 0;
+}
+
+bool enqueue(Queue *q, Point p) {
+    if (q->size == QUEUE_CAPACITY)
+        return false;
+    q->data[q->tail] = p;
+    q->tail = (q->tail + 1) % QUEUE_CAPACITY;
+    q->size++;
+    return true;
+}
+
+bool dequeue(Queue *q, Point *out_p) {
+    if (q->size == 0)
+        return false;
+    *out_p = q->data[q->head];
+    q->head = (q->head + 1) % QUEUE_CAPACITY;
+    q->size--;
+    return true;
+}
+
+// 3. Helper to check if a move is inside the grid and walkable
+bool is_valid_move(int r, int c, int grid[ROW_COUNT][COL_COUNT],
+                   bool visited[ROW_COUNT][COL_COUNT]) {
+    return (r >= 0 && r < ROW_COUNT && c >= 0 && c < COL_COUNT &&
+            grid[r][c] == 0 && !visited[r][c]);
+}
+
+int main() {
+    FILE *fp = fopen("s1.txt", "rb");
+    if (fp == NULL) {
+        perror("fopen");
+        return 1;
+    }
+    char grid[ROW_COUNT][COL_COUNT];
+    char buffer[64];
+    int index = 0;
+    int len = 0;
+    int row = 0;
+    char direction;
+    char prevdir;
+    rewind(fp);
+    while (fgets(buffer, 64, fp) != NULL) {
+        index = 0;
+        buffer[strcspn(buffer, "\n")] = '\0';
+        buffer[strcspn(buffer, "\r")] = '\0';
+        len = strlen(buffer);
+        printf("%s\n", buffer);
+        for (int i = 0; i < len; i++) {
+            grid[row][index++] = buffer[i];
+        }
+        row++;
+    }
+    row = 0;
+    int col = 0;
+
+    // Array to track where we have already been so we don't loop forever
+    bool visited[ROW_COUNT][COL_COUNT] = {false};
+    Point start = {0, 0};
+    direction = grid[start.row][start.col];
+    prevdir = direction;
+    Point end = {9, 9};
+    Queue q;
+    queue_init(&q);
+
+    // Setup starting position
+    start.steps = 0;
+    int next_row = 0;
+    int next_col = 0;
+    enqueue(&q, start);
+    visited[start.row][start.col] = true;
+    Point current;
+    while (dequeue(&q, &current)) {
+        switch (direction) {
+        case '>':
+            //     printf(">");
+            next_col++;
+            if (visited[next_row][next_col] == true) {
+                break;
+            } else {
+                visited[next_row][next_col] = true;
+                Point nextpoint = {next_row, next_col, current.steps + 1};
+                enqueue(&q, nextpoint);
+            }
+            break;
+        case 'v':
+            //    printf("v\n");
+            next_row++;
+            if (visited[next_row][next_col] == true) {
+                break;
+            } else {
+                visited[next_row][next_col] = true;
+                Point nextpoint = {next_row, next_col, current.steps + 1};
+                enqueue(&q, nextpoint);
+            }
+            break;
+        case '<':
+            //     printf("<");
+            next_col--;
+            if (visited[next_row][next_col] == true) {
+                break;
+            } else {
+                visited[next_row][next_col] = true;
+                Point nextpoint = {next_row, next_col, current.steps + 1};
+                enqueue(&q, nextpoint);
+            }
+            break;
+        case '^':
+            //     printf("^");
+            next_row--;
+            if (visited[next_row][next_col] == true) {
+                break;
+            } else {
+                visited[next_row][next_col] = true;
+                Point nextpoint = {next_row, next_col, current.steps + 1};
+                enqueue(&q, nextpoint);
+            }
+            break;
+        default:
+            break;
+        }
+
+        // If we reached the destination, return the steps taken
+        // if (current.row == end.row && current.col == end.col) {
+        //     return current.steps;
+        // }
+        direction = grid[next_row][next_col];
+    }
+    printf("Part 1: %d\n", current.steps + 1);
+
+    // Part 2
+    int ndx = 0;
+    for (int i = 1; i < ROW_COUNT - 1; i++) {
+
+        for (int j = 1; j < COL_COUNT - 1; j++) {
+            Changes *change = calloc(1, sizeof(Changes));
+            change->orig = grid[i][j];
+            change->row = i;
+            change->col = j;
+            changethese[ndx++] = *change;
+            //    printf("%d\n", ndx);
+        }
+    }
+    int size = ndx;
+    start.steps = 0;
+    next_row = 0;
+    next_col = 0;
+    int max = 0;
+
+    start.row = 0;
+    start.col = 0;
+    char newstartdir;
+    char orig_dir;
+    char pos[4] = {'>', 'v', '^', '<'};
+    ndx = 0;
+
+    while (ndx < size) {
+        orig_dir = changethese[ndx].orig;
+        for (int m = 0; m < 4; m++) {
+
+            // if (k != 0 && k != ROW_COUNT - 1 && p != COL_COUNT - 1 &&
+            //     p != 0) {
+            //     //    direction = pos[m];
+            //     next_row = changethese[ndx].row;
+            //     next_col=changethese[ndx].col;
+            //     grid[next_row][next_col] = pos[m];
+            //     printf("Changing %d %d to %c\n", k, p, direction);
+            //     // for (int s = 0; s < ROW_COUNT; s++) {
+            //     //     for (int t = 0; t < COL_COUNT; t++) {
+            //     //         printf("%c", grid[s][t]);
+            //     //     }
+            //     //     printf("\n");
+            //     // }
+            // }
+
+            direction = pos[m];
+            newstartdir = direction;
+            next_row = changethese[ndx].row;
+            next_col = changethese[ndx].col;
+
+            grid[next_row][next_col] = direction;
+            printf("Changing %d %d from %c to %c\n", next_row, next_col,
+                   orig_dir, direction);
+
+            memset(visited, false, sizeof(visited));
+            current.steps = 0;
+            direction = grid[0][0];
+            enqueue(&q, start);
+            next_col = 0;
+            next_row = 0;
+            visited[start.row][start.col] = true;
+            while (dequeue(&q, &current)) {
+                switch (direction) {
+                case '>':
+                    //     printf(">");
+                    next_col++;
+                    if (visited[next_row][next_col] == true) {
+                        break;
+                    } else {
+                        visited[next_row][next_col] = true;
+                        Point nextpoint = {next_row, next_col,
+                                           current.steps + 1};
+                        enqueue(&q, nextpoint);
+                    }
+                    break;
+                case 'v':
+                    //    printf("v\n");
+                    next_row++;
+                    if (visited[next_row][next_col] == true) {
+                        break;
+                    } else {
+                        visited[next_row][next_col] = true;
+                        Point nextpoint = {next_row, next_col,
+                                           current.steps + 1};
+                        enqueue(&q, nextpoint);
+                    }
+                    break;
+                case '<':
+                    //     printf("<");
+                    next_col--;
+                    if (visited[next_row][next_col] == true) {
+                        break;
+                    } else {
+                        visited[next_row][next_col] = true;
+                        Point nextpoint = {next_row, next_col,
+                                           current.steps + 1};
+                        enqueue(&q, nextpoint);
+                    }
+                    break;
+                case '^':
+                    //     printf("^");
+                    next_row--;
+                    if (visited[next_row][next_col] == true) {
+                        break;
+                    } else {
+                        visited[next_row][next_col] = true;
+                        Point nextpoint = {next_row, next_col,
+                                           current.steps + 1};
+                        enqueue(&q, nextpoint);
+                    }
+                    break;
+                default:
+                    break;
+                }
+
+                direction = grid[next_row][next_col];
+            }
+            if (max < current.steps + 1) {
+                max = current.steps + 1;
+                printf("Max: %d with %c at (%d,%d)\n", current.steps + 1,
+                       newstartdir, changethese[ndx].row, changethese[ndx].col);
+            } else {
+                printf("Current: %d with %c at (%d,%d)\n", current.steps + 1,
+                       newstartdir, changethese[ndx].row, changethese[ndx].col);
+            }
+
+            grid[changethese[ndx].row][changethese[ndx].col] = orig_dir;
+        }
+        ndx++;
+    }
+
+    return 0;
+}
